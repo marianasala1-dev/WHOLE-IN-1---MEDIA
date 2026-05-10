@@ -1,0 +1,1899 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Whole In 1 — Prototipo Fidelidad Media</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green-deep: #1f4a2e;
+    --green-primary: #2d6a3e;
+    --green-mid: #3d8b4f;
+    --green-light: #8bc34a;
+    --green-accent: #b6e388;
+    --cream: #f4efe1;
+    --white: #ffffff;
+    --gray-light: #e6e6e6;
+    --gray-mid: #888;
+    --text-dark: #1a2e22;
+    --shadow: 0 20px 60px rgba(0,0,0,0.25);
+    --shadow-soft: 0 4px 12px rgba(0,0,0,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: linear-gradient(135deg, #f0f3ee 0%, #e8efe5 100%);
+    min-height: 100vh;
+    color: var(--text-dark);
+  }
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 16px 60px;
+  }
+
+  /* Header */
+  .page-header {
+    text-align: center;
+    margin-bottom: 28px;
+    max-width: 600px;
+  }
+  .page-header h1 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 28px;
+    color: var(--green-deep);
+    margin-bottom: 6px;
+    letter-spacing: -0.5px;
+  }
+  .page-header p {
+    color: #4a5d52;
+    font-size: 14px;
+  }
+  .page-header .pill {
+    display: inline-block;
+    background: var(--green-deep);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-top: 8px;
+  }
+
+  /* Phone frame */
+  .phone-wrapper {
+    position: relative;
+  }
+  .phone {
+    width: 380px;
+    height: 780px;
+    background: #0a0a0a;
+    border-radius: 50px;
+    padding: 12px;
+    box-shadow: var(--shadow), inset 0 0 0 2px #2a2a2a;
+    position: relative;
+  }
+  .phone::before {
+    content: '';
+    position: absolute;
+    top: 22px; left: 50%;
+    transform: translateX(-50%);
+    width: 130px; height: 28px;
+    background: #0a0a0a;
+    border-radius: 0 0 18px 18px;
+    z-index: 10;
+  }
+  .phone::after {
+    content: '';
+    position: absolute;
+    bottom: 8px; left: 50%;
+    transform: translateX(-50%);
+    width: 120px; height: 4px;
+    background: #333;
+    border-radius: 2px;
+  }
+  .screen {
+    width: 100%;
+    height: 100%;
+    border-radius: 38px;
+    overflow: hidden;
+    position: relative;
+    background: var(--green-primary);
+  }
+
+  /* Status bar */
+  .status-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 44px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 30px 0;
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+    z-index: 5;
+    pointer-events: none;
+  }
+  .status-bar .icons { display: flex; gap: 6px; align-items: center; }
+  .status-bar .icons span { font-size: 11px; }
+
+  /* Screens container */
+  .screens {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+  .scr {
+    position: absolute;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    padding: 60px 28px 28px;
+    background: var(--green-primary);
+    color: white;
+    overflow-y: auto;
+  }
+  .scr.active {
+    display: flex;
+    animation: fadeIn 0.32s ease-out;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateX(8px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  /* Common UI elements */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 24px;
+    border-radius: 14px;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.12s ease, box-shadow 0.2s ease, background 0.2s ease;
+    text-decoration: none;
+    width: 100%;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary {
+    background: var(--green-light);
+    color: white;
+    box-shadow: 0 6px 18px rgba(139, 195, 74, 0.4);
+  }
+  .btn-primary:hover { background: #9cd158; }
+  .btn-outline {
+    background: transparent;
+    border: 1.5px solid rgba(255,255,255,0.5);
+    color: white;
+  }
+  .btn-outline:hover { background: rgba(255,255,255,0.1); }
+  .btn-ghost {
+    background: transparent;
+    color: rgba(255,255,255,0.85);
+    text-decoration: underline;
+    padding: 8px;
+    width: auto;
+  }
+  .btn-secondary {
+    background: white;
+    color: var(--green-deep);
+  }
+  .btn-dark {
+    background: var(--green-deep);
+    color: white;
+  }
+  .back-btn {
+    position: absolute;
+    top: 50px;
+    left: 22px;
+    background: rgba(255,255,255,0.15);
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    border: none;
+    color: white;
+    cursor: pointer;
+    z-index: 6;
+    backdrop-filter: blur(10px);
+    font-size: 16px;
+  }
+  .back-btn:hover { background: rgba(255,255,255,0.25); }
+
+  /* SPLASH */
+  .splash {
+    background: linear-gradient(180deg, var(--green-deep) 0%, var(--green-primary) 100%);
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  .logo-circle {
+    width: 110px; height: 110px;
+    background: var(--green-light);
+    border-radius: 28px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 24px;
+    box-shadow: 0 14px 40px rgba(139, 195, 74, 0.35);
+    transform: rotate(-6deg);
+  }
+  .logo-circle svg { width: 60px; height: 60px; }
+  .splash h1 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 44px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 6px;
+  }
+  .splash .tagline {
+    font-size: 13px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--green-accent);
+    font-weight: 600;
+  }
+  .splash .loader {
+    margin-top: 70px;
+    width: 30px; height: 30px;
+    border: 3px solid rgba(255,255,255,0.2);
+    border-top-color: var(--green-light);
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ONBOARDING */
+  .onboarding {
+    background: linear-gradient(180deg, var(--green-deep) 0%, var(--green-primary) 100%);
+    justify-content: space-between;
+    text-align: center;
+    padding-top: 80px;
+  }
+  .onboarding .skip {
+    position: absolute;
+    top: 56px; right: 24px;
+    color: rgba(255,255,255,0.7);
+    font-size: 13px;
+    background: none; border: none;
+    cursor: pointer;
+    z-index: 6;
+  }
+  .onboarding .illustration {
+    width: 180px; height: 180px;
+    background: rgba(255,255,255,0.08);
+    border: 2px solid rgba(255,255,255,0.15);
+    border-radius: 28px;
+    margin: 20px auto;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .onboarding .illustration svg { width: 110px; height: 110px; }
+  .onboarding-content { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+  .onboarding h2 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 26px;
+    margin-bottom: 12px;
+    line-height: 1.25;
+    padding: 0 10px;
+  }
+  .onboarding p {
+    font-size: 15px;
+    line-height: 1.5;
+    color: rgba(255,255,255,0.85);
+    padding: 0 12px;
+    max-width: 290px;
+  }
+  .dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin: 24px 0;
+  }
+  .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.3);
+    transition: background 0.25s, width 0.25s;
+  }
+  .dot.active {
+    background: var(--green-light);
+    width: 24px;
+    border-radius: 4px;
+  }
+
+  /* LEVEL */
+  .level {
+    background: linear-gradient(180deg, var(--green-deep) 0%, var(--green-primary) 60%, var(--green-mid) 100%);
+    align-items: center;
+    text-align: center;
+    padding-top: 90px;
+  }
+  .level h2 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 26px;
+    margin-bottom: 10px;
+  }
+  .level .sub {
+    color: rgba(255,255,255,0.75);
+    font-size: 14px;
+    margin-bottom: 32px;
+    max-width: 280px;
+  }
+  .level-options {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 12px;
+  }
+  .level-card {
+    background: rgba(255,255,255,0.08);
+    border: 1.5px solid rgba(255,255,255,0.18);
+    border-radius: 18px;
+    padding: 18px 18px;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-family: 'Inter', sans-serif;
+  }
+  .level-card:hover {
+    background: rgba(255,255,255,0.15);
+    transform: translateY(-2px);
+    border-color: var(--green-light);
+  }
+  .level-card .emoji {
+    width: 46px; height: 46px;
+    background: var(--green-light);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .level-card .info { flex: 1; }
+  .level-card .lvl-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+  .level-card .lvl-desc {
+    font-size: 12px;
+    color: rgba(255,255,255,0.7);
+  }
+  .level-card .arrow {
+    color: rgba(255,255,255,0.5);
+    font-size: 18px;
+  }
+
+  /* VIDEO TUTORIAL (BEGINNER) */
+  .tutorial {
+    padding: 60px 0 0;
+    background: var(--green-deep);
+  }
+  .tutorial .header {
+    padding: 0 24px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .tutorial .header h3 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 17px;
+  }
+  .tutorial .video-box {
+    background: #0d1f14;
+    margin: 0 18px;
+    border-radius: 18px;
+    aspect-ratio: 9/14;
+    position: relative;
+    overflow: hidden;
+    background-image: linear-gradient(135deg, #1a3a25 0%, #0d1f14 100%);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .tutorial .video-box::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 30% 30%, rgba(139,195,74,0.15) 0%, transparent 60%),
+      radial-gradient(ellipse at 70% 80%, rgba(45,106,62,0.3) 0%, transparent 60%);
+  }
+  .play-button {
+    width: 70px; height: 70px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.95);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 2;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    transition: transform 0.2s;
+  }
+  .play-button:hover { transform: scale(1.08); }
+  .play-button::before {
+    content: '';
+    width: 0; height: 0;
+    border-left: 18px solid var(--green-deep);
+    border-top: 12px solid transparent;
+    border-bottom: 12px solid transparent;
+    margin-left: 5px;
+  }
+  .video-overlay {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 14px;
+    background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.75) 100%);
+    color: white;
+    z-index: 3;
+  }
+  .video-overlay .v-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .video-overlay .v-meta { font-size: 11px; color: rgba(255,255,255,0.7); }
+  .video-progress {
+    position: absolute;
+    bottom: 0; left: 0;
+    height: 3px;
+    width: 32%;
+    background: var(--green-light);
+    z-index: 4;
+  }
+  .silhouette-bg {
+    position: absolute;
+    inset: 0;
+    display: flex; align-items: flex-end; justify-content: center;
+    z-index: 1;
+    opacity: 0.45;
+  }
+  .silhouette-bg svg { width: 70%; height: 90%; }
+
+  .tutorial .lessons {
+    padding: 16px 24px 0;
+    flex: 1;
+  }
+  .tutorial .lessons h4 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+    color: var(--green-accent);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+  }
+  .lesson-item {
+    background: rgba(255,255,255,0.06);
+    padding: 11px 14px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .lesson-item .num {
+    width: 26px; height: 26px;
+    background: var(--green-light);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700;
+    font-size: 12px;
+    color: var(--green-deep);
+    flex-shrink: 0;
+  }
+  .lesson-item .ltitle { font-size: 13px; font-weight: 500; flex: 1; }
+  .lesson-item .ltime { font-size: 11px; color: rgba(255,255,255,0.55); }
+  .tutorial .footer-actions {
+    padding: 12px 24px 24px;
+  }
+
+  /* INTERMEDIATE REMINDERS */
+  .reminders {
+    background: linear-gradient(180deg, var(--green-deep) 0%, var(--green-primary) 100%);
+    padding-top: 60px;
+  }
+  .reminders .header {
+    padding: 0 8px 18px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .reminders .header h3 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 18px;
+  }
+  .reminders .intro {
+    font-size: 13px;
+    color: rgba(255,255,255,0.75);
+    margin-bottom: 22px;
+    padding: 0 8px;
+  }
+  .reminder-card {
+    background: rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+    border: 1px solid rgba(255,255,255,0.12);
+    display: flex; gap: 14px;
+    align-items: flex-start;
+  }
+  .reminder-card .icon-box {
+    width: 44px; height: 44px;
+    background: var(--green-light);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    color: var(--green-deep);
+    font-size: 22px;
+    font-weight: 800;
+  }
+  .reminder-card h5 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 15px;
+    margin-bottom: 4px;
+  }
+  .reminder-card p {
+    font-size: 12px;
+    line-height: 1.45;
+    color: rgba(255,255,255,0.8);
+  }
+
+  /* CAMERA / RECORD SCREEN */
+  .camera {
+    padding: 0;
+    background: #0a0a0a;
+  }
+  .camera-view {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(180deg, #4a6741 0%, #6b8c5a 35%, #8fb37a 60%, #b5d68e 100%);
+    overflow: hidden;
+  }
+  .camera-view::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 30% 60%, rgba(255,255,255,0.15) 0%, transparent 40%),
+      radial-gradient(circle at 80% 30%, rgba(255,235,150,0.2) 0%, transparent 50%);
+  }
+  .grass-detail {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 30%;
+    background:
+      repeating-linear-gradient(90deg,
+        rgba(60,100,40,0.4) 0,
+        rgba(60,100,40,0.4) 1px,
+        transparent 1px,
+        transparent 4px);
+    opacity: 0.5;
+  }
+  .silhouette-guide {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -42%);
+    width: 60%;
+    z-index: 2;
+    opacity: 0.55;
+  }
+  .silhouette-guide svg {
+    width: 100%;
+    filter: drop-shadow(0 0 12px rgba(255,255,255,0.4));
+  }
+  .camera-top {
+    position: absolute;
+    top: 50px; left: 0; right: 0;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 5;
+  }
+  .cam-btn {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(10px);
+    border: none;
+    color: white;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+  .rec-indicator {
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(10px);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .rec-dot {
+    width: 8px; height: 8px;
+    background: #ff3b30;
+    border-radius: 50%;
+    animation: pulse 1.2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  .camera-hint {
+    position: absolute;
+    top: 105px; left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(10px);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 12px;
+    z-index: 5;
+    text-align: center;
+    white-space: nowrap;
+  }
+  .camera-controls {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 160px;
+    background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.8) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 30px 40px;
+    z-index: 5;
+  }
+  .record-btn {
+    width: 76px; height: 76px;
+    border-radius: 50%;
+    background: white;
+    border: 4px solid rgba(255,255,255,0.6);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+    padding: 4px;
+  }
+  .record-btn:hover { transform: scale(1.05); }
+  .record-btn-inner {
+    width: 100%; height: 100%;
+    background: #ff3b30;
+    border-radius: 50%;
+    transition: all 0.2s;
+  }
+  .record-btn.recording .record-btn-inner {
+    border-radius: 8px;
+    width: 32px; height: 32px;
+    margin: auto;
+  }
+  .timer {
+    position: absolute;
+    bottom: 150px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 59, 48, 0.95);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+    z-index: 5;
+    display: none;
+  }
+  .timer.active { display: block; }
+
+  /* AI ANALYSIS */
+  .analyzing {
+    background: linear-gradient(180deg, var(--green-deep) 0%, var(--green-primary) 100%);
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  .ai-orb {
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--green-light) 0%, var(--green-mid) 60%, transparent 80%);
+    position: relative;
+    margin-bottom: 32px;
+    animation: pulse-orb 2s infinite ease-in-out;
+  }
+  .ai-orb::before {
+    content: '';
+    position: absolute;
+    inset: 16px;
+    border-radius: 50%;
+    background: var(--green-deep);
+    box-shadow: inset 0 0 30px rgba(139,195,74,0.4);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .ai-orb::after {
+    content: '🤖';
+    position: absolute;
+    inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 50px;
+    z-index: 2;
+  }
+  @keyframes pulse-orb {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(139,195,74,0.4); }
+    50% { transform: scale(1.05); box-shadow: 0 0 0 25px rgba(139,195,74,0); }
+  }
+  .analyzing h3 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 22px;
+    margin-bottom: 10px;
+  }
+  .analyzing .progress-text {
+    color: rgba(255,255,255,0.75);
+    font-size: 14px;
+    margin-bottom: 30px;
+    min-height: 21px;
+  }
+  .progress-bar {
+    width: 70%;
+    height: 6px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--green-light);
+    width: 0%;
+    transition: width 0.3s ease;
+    border-radius: 999px;
+  }
+
+  /* FEEDBACK */
+  .feedback {
+    background: linear-gradient(180deg, var(--green-deep) 0%, var(--green-primary) 100%);
+    padding-top: 60px;
+  }
+  .feedback .top-bar {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 18px;
+  }
+  .feedback h3 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 18px;
+  }
+  .score-card {
+    background: linear-gradient(135deg, var(--green-light) 0%, var(--green-mid) 100%);
+    border-radius: 22px;
+    padding: 22px;
+    text-align: center;
+    margin-bottom: 18px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  }
+  .score-card .score-num {
+    font-family: 'Poppins', sans-serif;
+    font-size: 56px;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .score-card .score-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    opacity: 0.9;
+    margin-bottom: 8px;
+  }
+  .score-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.25);
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .feedback-section {
+    margin-bottom: 14px;
+  }
+  .feedback-section h5 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--green-accent);
+    margin-bottom: 8px;
+    font-weight: 700;
+  }
+  .feedback-item {
+    background: rgba(255,255,255,0.08);
+    padding: 12px 14px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .feedback-item.positive { border-left: 3px solid var(--green-light); }
+  .feedback-item.improve { border-left: 3px solid #ffb84d; }
+  .feedback-item .emoji-icon {
+    font-size: 22px;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+  .feedback-item .text {
+    font-size: 13px;
+    line-height: 1.45;
+  }
+  .feedback-item .text strong { display: block; font-size: 13px; margin-bottom: 2px; }
+  .feedback-item .text span { color: rgba(255,255,255,0.7); font-size: 12px; }
+
+  /* AUTH SCREENS */
+  .auth-promo {
+    background: linear-gradient(180deg, var(--green-deep) 0%, var(--green-primary) 100%);
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    padding-top: 70px;
+  }
+  .auth-promo .icon-circle {
+    width: 90px; height: 90px;
+    background: var(--green-light);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 22px;
+    font-size: 40px;
+    box-shadow: 0 10px 25px rgba(139,195,74,0.4);
+  }
+  .auth-promo h2 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 26px;
+    margin-bottom: 10px;
+    line-height: 1.25;
+  }
+  .auth-promo p {
+    font-size: 14px;
+    color: rgba(255,255,255,0.8);
+    margin-bottom: 28px;
+    line-height: 1.5;
+    max-width: 280px;
+  }
+  .feature-list {
+    width: 100%;
+    margin-bottom: 24px;
+  }
+  .feature-list .item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 8px 0;
+    font-size: 13px;
+    text-align: left;
+  }
+  .feature-list .check {
+    width: 22px; height: 22px;
+    background: var(--green-light);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--green-deep);
+    font-weight: 800;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  .form-screen {
+    background: linear-gradient(180deg, var(--green-deep) 0%, var(--green-primary) 100%);
+    padding-top: 60px;
+  }
+  .form-screen .header {
+    margin-bottom: 22px;
+  }
+  .form-screen h2 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 22px;
+    margin-bottom: 6px;
+  }
+  .form-screen .sub {
+    color: rgba(255,255,255,0.75);
+    font-size: 13px;
+  }
+  .form-group {
+    margin-bottom: 14px;
+  }
+  .form-group label {
+    display: block;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--green-accent);
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+  .form-group input {
+    width: 100%;
+    padding: 14px 16px;
+    background: rgba(255,255,255,0.1);
+    border: 1.5px solid rgba(255,255,255,0.2);
+    border-radius: 12px;
+    color: white;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.2s;
+  }
+  .form-group input:focus {
+    outline: none;
+    background: rgba(255,255,255,0.15);
+    border-color: var(--green-light);
+  }
+  .form-group input::placeholder { color: rgba(255,255,255,0.4); }
+  .form-divider {
+    text-align: center;
+    margin: 18px 0;
+    color: rgba(255,255,255,0.5);
+    font-size: 12px;
+    position: relative;
+  }
+  .form-divider::before, .form-divider::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 35%;
+    height: 1px;
+    background: rgba(255,255,255,0.2);
+  }
+  .form-divider::before { left: 0; }
+  .form-divider::after { right: 0; }
+  .social-btns {
+    display: flex; gap: 10px;
+    margin-bottom: 16px;
+  }
+  .social-btn {
+    flex: 1;
+    background: white;
+    color: var(--text-dark);
+    padding: 12px;
+    border-radius: 12px;
+    border: none;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .social-btn:hover { background: #f0f0f0; }
+  .legal {
+    font-size: 11px;
+    color: rgba(255,255,255,0.55);
+    text-align: center;
+    line-height: 1.5;
+    margin-top: 14px;
+  }
+  .legal a { color: var(--green-accent); text-decoration: none; }
+
+  /* PLANS */
+  .plans {
+    background: linear-gradient(180deg, var(--green-deep) 0%, var(--green-primary) 100%);
+    padding-top: 60px;
+  }
+  .plans .header {
+    text-align: center;
+    margin-bottom: 22px;
+  }
+  .plans h2 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 24px;
+    margin-bottom: 6px;
+  }
+  .plans .sub {
+    font-size: 13px;
+    color: rgba(255,255,255,0.75);
+  }
+  .plan-card {
+    background: rgba(255,255,255,0.08);
+    border: 1.5px solid rgba(255,255,255,0.15);
+    border-radius: 18px;
+    padding: 18px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .plan-card:hover {
+    background: rgba(255,255,255,0.13);
+    transform: translateY(-2px);
+  }
+  .plan-card.selected {
+    border-color: var(--green-light);
+    background: rgba(139,195,74,0.15);
+    box-shadow: 0 6px 20px rgba(139,195,74,0.25);
+  }
+  .plan-card.featured {
+    background: linear-gradient(135deg, rgba(139,195,74,0.25) 0%, rgba(45,106,62,0.4) 100%);
+    border-color: var(--green-light);
+  }
+  .badge-popular {
+    position: absolute;
+    top: -10px; right: 14px;
+    background: var(--green-light);
+    color: var(--green-deep);
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .plan-head {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 10px;
+  }
+  .plan-name {
+    font-family: 'Poppins', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+  }
+  .plan-price {
+    font-family: 'Poppins', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+  }
+  .plan-price small {
+    font-size: 11px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.7);
+  }
+  .plan-features {
+    list-style: none;
+    padding: 0; margin: 0;
+  }
+  .plan-features li {
+    font-size: 12px;
+    color: rgba(255,255,255,0.85);
+    padding: 4px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .plan-features li::before {
+    content: '✓';
+    color: var(--green-light);
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+  .plan-features li.no::before { content: '−'; color: rgba(255,255,255,0.3); }
+  .plan-radio {
+    width: 22px; height: 22px;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .plan-card.selected .plan-radio {
+    border-color: var(--green-light);
+    background: var(--green-light);
+  }
+  .plan-card.selected .plan-radio::after {
+    content: '✓';
+    color: var(--green-deep);
+    font-weight: 800;
+    font-size: 13px;
+  }
+
+  /* CHECKOUT */
+  .checkout {
+    background: linear-gradient(180deg, var(--green-deep) 0%, var(--green-primary) 100%);
+    padding-top: 60px;
+  }
+  .checkout .header {
+    margin-bottom: 18px;
+  }
+  .checkout h2 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 22px;
+    margin-bottom: 4px;
+  }
+  .checkout .sub {
+    font-size: 13px;
+    color: rgba(255,255,255,0.75);
+  }
+  .order-summary {
+    background: rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 18px;
+    border: 1px solid rgba(255,255,255,0.12);
+  }
+  .order-row {
+    display: flex; justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 13px;
+  }
+  .order-row.total {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed rgba(255,255,255,0.2);
+    font-size: 16px;
+    font-weight: 700;
+  }
+  .pay-method {
+    display: flex; gap: 8px;
+    margin-bottom: 14px;
+  }
+  .pay-method-btn {
+    flex: 1;
+    background: rgba(255,255,255,0.08);
+    border: 1.5px solid rgba(255,255,255,0.15);
+    border-radius: 12px;
+    padding: 12px 6px;
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s;
+  }
+  .pay-method-btn.active {
+    background: rgba(139,195,74,0.2);
+    border-color: var(--green-light);
+  }
+  .pay-method-btn .icon { font-size: 22px; }
+
+  /* SUCCESS */
+  .success {
+    background: linear-gradient(180deg, var(--green-deep) 0%, var(--green-primary) 100%);
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  .success-icon {
+    width: 110px; height: 110px;
+    border-radius: 50%;
+    background: var(--green-light);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 24px;
+    box-shadow: 0 10px 30px rgba(139,195,74,0.4);
+    animation: pop 0.5s ease-out;
+  }
+  @keyframes pop {
+    0% { transform: scale(0); }
+    70% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+  }
+  .success-icon svg { width: 60px; height: 60px; color: white; }
+  .success h2 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 28px;
+    margin-bottom: 10px;
+  }
+  .success p {
+    font-size: 14px;
+    color: rgba(255,255,255,0.85);
+    margin-bottom: 32px;
+    max-width: 270px;
+    line-height: 1.5;
+  }
+
+  /* Reset / Flow controls (outside phone) */
+  .controls {
+    margin-top: 28px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 380px;
+  }
+  .controls button {
+    background: white;
+    border: 1.5px solid #d4dbcf;
+    color: var(--green-deep);
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.15s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .controls button:hover {
+    background: var(--green-deep);
+    color: white;
+    border-color: var(--green-deep);
+  }
+  .flow-indicator {
+    background: var(--green-deep);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: 14px;
+    letter-spacing: 0.3px;
+  }
+  .flow-indicator span { color: var(--green-accent); }
+
+  /* Responsive — móvil */
+  @media (max-width: 460px) {
+    body { padding: 16px 8px 40px; }
+    .page-header h1 { font-size: 22px; }
+    .page-header p { font-size: 13px; }
+    .phone-wrapper {
+      transform: scale(0.85);
+      transform-origin: top center;
+      margin-bottom: -120px;
+    }
+    .controls { transform: scale(0.95); }
+  }
+  @media (max-width: 380px) {
+    .phone-wrapper {
+      transform: scale(0.78);
+      margin-bottom: -170px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Whole In 1</h1>
+  <p>Coach de golf con inteligencia artificial</p>
+  <div class="pill">Prototipo · Fidelidad media</div>
+</div>
+
+<div class="phone-wrapper">
+  <div class="phone">
+    <div class="screen">
+      <!-- Status bar (decorative iOS-like) -->
+      <div class="status-bar">
+        <span>9:41</span>
+        <div class="icons">
+          <span>●●●</span>
+          <span>📶</span>
+          <span>🔋</span>
+        </div>
+      </div>
+
+      <div class="screens">
+
+        <!-- 1. SPLASH -->
+        <div class="scr splash active" data-screen="splash">
+          <div class="logo-circle">
+            <svg viewBox="0 0 64 64" fill="none">
+              <circle cx="32" cy="32" r="22" fill="#fff"/>
+              <circle cx="28" cy="28" r="2" fill="#2d6a3e"/>
+              <circle cx="36" cy="28" r="2" fill="#2d6a3e"/>
+              <circle cx="28" cy="36" r="2" fill="#2d6a3e"/>
+              <circle cx="36" cy="36" r="2" fill="#2d6a3e"/>
+              <circle cx="32" cy="32" r="2" fill="#2d6a3e"/>
+              <path d="M14 42 L40 16" stroke="#2d6a3e" stroke-width="3" stroke-linecap="round"/>
+              <circle cx="42" cy="14" r="3" fill="#2d6a3e"/>
+            </svg>
+          </div>
+          <h1>Whole In 1</h1>
+          <div class="tagline">AI Golf Coach</div>
+          <div class="loader"></div>
+        </div>
+
+        <!-- 2. ONBOARDING 1 -->
+        <div class="scr onboarding" data-screen="onb1">
+          <button class="skip" onclick="goTo('level')">Saltar</button>
+          <div class="onboarding-content">
+            <div class="illustration">
+              <svg viewBox="0 0 100 100" fill="none">
+                <circle cx="50" cy="50" r="40" stroke="#b6e388" stroke-width="2" stroke-dasharray="4 4"/>
+                <circle cx="50" cy="50" r="22" fill="#8bc34a" opacity="0.3"/>
+                <circle cx="50" cy="50" r="10" fill="#8bc34a"/>
+                <path d="M30 30 L70 70 M70 30 L30 70" stroke="#fff" stroke-width="1" opacity="0.4"/>
+                <text x="50" y="55" text-anchor="middle" fill="#fff" font-size="18" font-weight="700">AI</text>
+              </svg>
+            </div>
+            <h2>Mejora tu swing<br>con inteligencia artificial</h2>
+            <p>Graba tu swing y nuestra IA lo analizará al instante para darte consejos personalizados.</p>
+          </div>
+          <div>
+            <div class="dots">
+              <div class="dot active"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+            </div>
+            <button class="btn btn-primary" onclick="goTo('onb2')">Siguiente</button>
+          </div>
+        </div>
+
+        <!-- 3. ONBOARDING 2 -->
+        <div class="scr onboarding" data-screen="onb2">
+          <button class="skip" onclick="goTo('level')">Saltar</button>
+          <div class="onboarding-content">
+            <div class="illustration">
+              <svg viewBox="0 0 100 100" fill="none">
+                <rect x="20" y="25" width="60" height="50" rx="8" fill="#b6e388" opacity="0.3"/>
+                <rect x="25" y="30" width="50" height="6" rx="3" fill="#fff" opacity="0.7"/>
+                <rect x="25" y="42" width="35" height="4" rx="2" fill="#fff" opacity="0.5"/>
+                <rect x="25" y="50" width="42" height="4" rx="2" fill="#fff" opacity="0.5"/>
+                <rect x="25" y="58" width="28" height="4" rx="2" fill="#fff" opacity="0.5"/>
+                <circle cx="78" cy="68" r="10" fill="#8bc34a"/>
+                <path d="M75 68 L77 71 L82 65" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              </svg>
+            </div>
+            <h2>Recibe feedback<br>personalizado</h2>
+            <p>Postura, agarre, rotación de cadera... La IA detecta cada detalle y te ayuda a corregirlo.</p>
+          </div>
+          <div>
+            <div class="dots">
+              <div class="dot"></div>
+              <div class="dot active"></div>
+              <div class="dot"></div>
+            </div>
+            <button class="btn btn-primary" onclick="goTo('onb3')">Siguiente</button>
+          </div>
+        </div>
+
+        <!-- 4. ONBOARDING 3 -->
+        <div class="scr onboarding" data-screen="onb3">
+          <button class="skip" onclick="goTo('level')">Saltar</button>
+          <div class="onboarding-content">
+            <div class="illustration">
+              <svg viewBox="0 0 100 100" fill="none">
+                <circle cx="50" cy="50" r="35" stroke="#b6e388" stroke-width="2"/>
+                <path d="M50 25 L50 50 L65 60" stroke="#8bc34a" stroke-width="3" stroke-linecap="round" fill="none"/>
+                <circle cx="50" cy="50" r="3" fill="#8bc34a"/>
+                <text x="50" y="80" text-anchor="middle" fill="#b6e388" font-size="9" font-weight="600">24/7</text>
+              </svg>
+            </div>
+            <h2>Entrena cuando<br>y donde quieras</h2>
+            <p>Sin necesidad de un coach físico. Practica a tu ritmo, en tu campo o desde casa.</p>
+          </div>
+          <div>
+            <div class="dots">
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot active"></div>
+            </div>
+            <button class="btn btn-primary" onclick="goTo('level')">Comenzar</button>
+          </div>
+        </div>
+
+        <!-- 5. NIVEL -->
+        <div class="scr level" data-screen="level">
+          <h2>¿Cuál es tu nivel?</h2>
+          <p class="sub">Personalizaremos tu experiencia según tu experiencia jugando golf.</p>
+          <div class="level-options">
+            <button class="level-card" onclick="setLevel('beginner'); goTo('tutorial')">
+              <div class="emoji">🌱</div>
+              <div class="info">
+                <div class="lvl-title">Principiante</div>
+                <div class="lvl-desc">Acabo de empezar o nunca he jugado</div>
+              </div>
+              <div class="arrow">›</div>
+            </button>
+            <button class="level-card" onclick="setLevel('intermediate'); goTo('reminders')">
+              <div class="emoji">⛳</div>
+              <div class="info">
+                <div class="lvl-title">Intermedio</div>
+                <div class="lvl-desc">Conozco lo básico y juego con regularidad</div>
+              </div>
+              <div class="arrow">›</div>
+            </button>
+            <button class="level-card" onclick="setLevel('advanced'); goTo('camera')">
+              <div class="emoji">🏆</div>
+              <div class="info">
+                <div class="lvl-title">Avanzado</div>
+                <div class="lvl-desc">Tengo experiencia y busco perfeccionar</div>
+              </div>
+              <div class="arrow">›</div>
+            </button>
+          </div>
+        </div>
+
+        <!-- 6A. TUTORIAL VIDEO (BEGINNER) -->
+        <div class="scr tutorial" data-screen="tutorial">
+          <button class="back-btn" onclick="goTo('level')">‹</button>
+          <div class="header" style="padding-left: 70px;">
+            <h3>Lección 1: Lo esencial</h3>
+          </div>
+          <div class="video-box">
+            <div class="silhouette-bg">
+              <svg viewBox="0 0 100 140" fill="#fff">
+                <ellipse cx="48" cy="14" rx="6" ry="7"/>
+                <path d="M42 22 L36 50 L40 78 L36 110 L40 130 L46 130 L48 100 L52 130 L58 130 L54 78 L58 50 L54 22 Z"/>
+                <path d="M42 32 L20 18 L16 14 L12 10" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                <circle cx="12" cy="10" r="2"/>
+              </svg>
+            </div>
+            <div class="play-button"></div>
+            <div class="video-progress"></div>
+            <div class="video-overlay">
+              <div class="v-title">Cómo agarrar el palo, postura y movimiento</div>
+              <div class="v-meta">3:24 · Video introductorio</div>
+            </div>
+          </div>
+          <div class="lessons">
+            <h4>En este video aprenderás</h4>
+            <div class="lesson-item">
+              <div class="num">1</div>
+              <div class="ltitle">Cómo agarrar el palo (grip)</div>
+              <div class="ltime">0:45</div>
+            </div>
+            <div class="lesson-item">
+              <div class="num">2</div>
+              <div class="ltitle">Cómo pararte (stance)</div>
+              <div class="ltime">1:30</div>
+            </div>
+            <div class="lesson-item">
+              <div class="num">3</div>
+              <div class="ltitle">El movimiento del swing</div>
+              <div class="ltime">2:10</div>
+            </div>
+          </div>
+          <div class="footer-actions">
+            <button class="btn btn-primary" onclick="goTo('camera')">¡Listo! Grabar mi swing</button>
+          </div>
+        </div>
+
+        <!-- 6B. RECORDATORIOS (INTERMEDIATE) -->
+        <div class="scr reminders" data-screen="reminders">
+          <button class="back-btn" onclick="goTo('level')">‹</button>
+          <div class="header" style="padding-left: 60px;">
+            <h3>Repaso rápido</h3>
+          </div>
+          <p class="intro" style="padding-left: 0;">Antes de grabar tu swing, recuerda estos fundamentos:</p>
+          <div class="reminder-card">
+            <div class="icon-box">✊</div>
+            <div>
+              <h5>Grip (Agarre)</h5>
+              <p>Sostén el palo con firmeza pero sin apretar. La mano izquierda arriba, la derecha debajo, dedos entrelazados.</p>
+            </div>
+          </div>
+          <div class="reminder-card">
+            <div class="icon-box">🦵</div>
+            <div>
+              <h5>Stance (Postura)</h5>
+              <p>Pies separados al ancho de los hombros. Rodillas ligeramente flexionadas. Espalda recta inclinada desde la cadera.</p>
+            </div>
+          </div>
+          <div class="reminder-card">
+            <div class="icon-box">🔄</div>
+            <div>
+              <h5>Rotación</h5>
+              <p>Gira los hombros y las caderas en el backswing. Mantén la cabeza quieta y transfiere el peso al pie delantero.</p>
+            </div>
+          </div>
+          <div style="margin-top: 16px;">
+            <button class="btn btn-primary" onclick="goTo('camera')">Entendido, a grabar</button>
+            <button class="btn btn-ghost" onclick="goTo('tutorial')" style="margin-top: 8px;">Ver video completo</button>
+          </div>
+        </div>
+
+        <!-- 7. CAMERA / RECORD -->
+        <div class="scr camera" data-screen="camera">
+          <div class="camera-view">
+            <div class="grass-detail"></div>
+            <div class="silhouette-guide">
+              <svg viewBox="0 0 100 180" fill="none" stroke="#fff" stroke-width="1.5" stroke-dasharray="3 3">
+                <ellipse cx="50" cy="20" rx="10" ry="12"/>
+                <path d="M40 32 L34 75 L40 130 L36 170 L46 170 L50 130 L54 170 L64 170 L60 130 L66 75 L60 32 Z"/>
+                <path d="M40 50 L18 30 L10 20" stroke-linecap="round"/>
+                <path d="M60 50 L80 35 L88 25" stroke-linecap="round"/>
+                <circle cx="88" cy="25" r="3" fill="#fff"/>
+              </svg>
+            </div>
+          </div>
+          <div class="camera-top">
+            <button class="cam-btn" onclick="goTo('level')">‹</button>
+            <div class="rec-indicator">
+              <div class="rec-dot"></div>
+              <span id="rec-status">Listo</span>
+            </div>
+            <button class="cam-btn">⚙</button>
+          </div>
+          <div class="camera-hint">Coloca tu cuerpo dentro de la silueta</div>
+          <div class="timer" id="cam-timer">00:00</div>
+          <div class="camera-controls">
+            <button class="cam-btn" style="width:48px;height:48px;">🔁</button>
+            <button class="record-btn" id="record-btn" onclick="toggleRecording()">
+              <div class="record-btn-inner"></div>
+            </button>
+            <button class="cam-btn" style="width:48px;height:48px;">💡</button>
+          </div>
+        </div>
+
+        <!-- 8. ANALIZANDO -->
+        <div class="scr analyzing" data-screen="analyzing">
+          <div class="ai-orb"></div>
+          <h3>Analizando tu swing...</h3>
+          <p class="progress-text" id="progress-text">Procesando video</p>
+          <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+          </div>
+        </div>
+
+        <!-- 9. FEEDBACK -->
+        <div class="scr feedback" data-screen="feedback">
+          <div class="top-bar">
+            <button class="back-btn" style="position:relative;top:0;left:0;" onclick="goTo('camera')">‹</button>
+            <h3>Tu primer análisis</h3>
+          </div>
+          <div class="score-card">
+            <div class="score-label">Puntuación general</div>
+            <div class="score-num">7.2</div>
+            <div class="score-badge">Buen swing</div>
+          </div>
+          <div class="feedback-section">
+            <h5>✨ Lo hiciste bien</h5>
+            <div class="feedback-item positive">
+              <div class="emoji-icon">✅</div>
+              <div class="text">
+                <strong>Buena postura</strong>
+                <span>Tu stance y equilibrio fueron consistentes durante el swing.</span>
+              </div>
+            </div>
+            <div class="feedback-item positive">
+              <div class="emoji-icon">✅</div>
+              <div class="text">
+                <strong>Agarre correcto</strong>
+                <span>Mantuviste un grip firme y bien posicionado.</span>
+              </div>
+            </div>
+          </div>
+          <div class="feedback-section">
+            <h5>💡 A mejorar</h5>
+            <div class="feedback-item improve">
+              <div class="emoji-icon">🔄</div>
+              <div class="text">
+                <strong>Aumenta la rotación de cadera</strong>
+                <span>Gira más las caderas en el backswing para ganar potencia.</span>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top: 16px;">
+            <button class="btn btn-primary" onclick="goTo('authPromo')">Guardar mi progreso</button>
+          </div>
+        </div>
+
+        <!-- 10. AUTH PROMO -->
+        <div class="scr auth-promo" data-screen="authPromo">
+          <div class="icon-circle">🏌️</div>
+          <h2>¡Tu primer swing!</h2>
+          <p>Crea tu cuenta para guardar tu progreso, recibir consejos personalizados y mejorar cada día.</p>
+          <div class="feature-list">
+            <div class="item"><div class="check">✓</div> Guarda el historial de tus swings</div>
+            <div class="item"><div class="check">✓</div> Estadísticas y progreso semanal</div>
+            <div class="item"><div class="check">✓</div> Consejos diarios personalizados</div>
+          </div>
+          <button class="btn btn-primary" onclick="goTo('signup')">Crear cuenta gratis</button>
+          <button class="btn btn-ghost" onclick="goTo('signup')" style="margin-top:6px;">Ya tengo cuenta · Iniciar sesión</button>
+        </div>
+
+        <!-- 11. SIGNUP -->
+        <div class="scr form-screen" data-screen="signup">
+          <button class="back-btn" onclick="goTo('authPromo')">‹</button>
+          <div class="header" style="padding-left: 50px;">
+            <h2>Crea tu cuenta</h2>
+            <p class="sub">Solo necesitamos unos datos básicos</p>
+          </div>
+          <form onsubmit="event.preventDefault(); goTo('plans');">
+            <div class="form-group">
+              <label>Correo electrónico</label>
+              <input type="email" placeholder="tucorreo@ejemplo.com" required>
+            </div>
+            <div class="form-group">
+              <label>Número de teléfono</label>
+              <input type="tel" placeholder="+34 600 000 000" required>
+            </div>
+            <div class="form-group">
+              <label>Contraseña</label>
+              <input type="password" placeholder="Mínimo 8 caracteres" required>
+            </div>
+            <button class="btn btn-primary" type="submit" style="margin-top: 8px;">Continuar</button>
+            <div class="form-divider">o regístrate con</div>
+            <div class="social-btns">
+              <button type="button" class="social-btn" onclick="goTo('plans')"> Apple</button>
+              <button type="button" class="social-btn" onclick="goTo('plans')">G Google</button>
+            </div>
+            <p class="legal">Al crear tu cuenta aceptas los <a href="#">términos</a> y la <a href="#">política de privacidad</a>.</p>
+          </form>
+        </div>
+
+        <!-- 12. PLANS -->
+        <div class="scr plans" data-screen="plans">
+          <button class="back-btn" onclick="goTo('signup')">‹</button>
+          <div class="header" style="padding-top: 8px;">
+            <h2>Elige tu plan</h2>
+            <p class="sub">Empieza gratis o desbloquea todo el potencial</p>
+          </div>
+
+          <div class="plan-card" data-plan="free" onclick="selectPlan(this)">
+            <div class="plan-head">
+              <div>
+                <div class="plan-name">Gratis</div>
+              </div>
+              <div class="plan-radio"></div>
+            </div>
+            <div class="plan-price" style="font-size: 18px; margin-bottom: 10px;">0€<small> /mes</small></div>
+            <ul class="plan-features">
+              <li>1 análisis de swing al día</li>
+              <li>Feedback básico de la IA</li>
+              <li class="no">Sin estadísticas avanzadas</li>
+              <li class="no">Sin videos premium</li>
+            </ul>
+          </div>
+
+          <div class="plan-card featured selected" data-plan="premium" onclick="selectPlan(this)">
+            <div class="badge-popular">Más popular</div>
+            <div class="plan-head">
+              <div>
+                <div class="plan-name">Premium</div>
+              </div>
+              <div class="plan-radio"></div>
+            </div>
+            <div class="plan-price" style="margin-bottom: 10px;">6,99€<small> /mes</small></div>
+            <ul class="plan-features">
+              <li>Análisis de swing ilimitados</li>
+              <li>Feedback detallado de la IA</li>
+              <li>Estadísticas y progreso semanal</li>
+              <li>Biblioteca de videos completa</li>
+            </ul>
+          </div>
+
+          <div class="plan-card" data-plan="premium-plus" onclick="selectPlan(this)">
+            <div class="plan-head">
+              <div>
+                <div class="plan-name">Premium Plus</div>
+              </div>
+              <div class="plan-radio"></div>
+            </div>
+            <div class="plan-price" style="margin-bottom: 10px;">15,99€<small> /mes</small></div>
+            <ul class="plan-features">
+              <li>Todo lo de Premium</li>
+              <li>Sesiones 1 a 1 con coach humano</li>
+              <li>Plan de entrenamiento personalizado</li>
+              <li>Comparativas con jugadores PRO</li>
+            </ul>
+          </div>
+
+          <div style="margin-top: 18px;">
+            <button class="btn btn-primary" id="continue-plan" onclick="continueFromPlan()">Continuar</button>
+          </div>
+        </div>
+
+        <!-- 13. CHECKOUT -->
+        <div class="scr checkout" data-screen="checkout">
+          <button class="back-btn" onclick="goTo('plans')">‹</button>
+          <div class="header" style="padding-left: 50px;">
+            <h2>Finalizar pago</h2>
+            <p class="sub">Estás a un paso de mejorar tu swing</p>
+          </div>
+          <div class="order-summary">
+            <div class="order-row"><span>Plan seleccionado</span><span id="sum-plan">Premium</span></div>
+            <div class="order-row"><span>Facturación</span><span>Mensual</span></div>
+            <div class="order-row"><span>Subtotal</span><span id="sum-sub">6,99€</span></div>
+            <div class="order-row"><span>IVA (21%)</span><span id="sum-tax">1,47€</span></div>
+            <div class="order-row total"><span>Total</span><span id="sum-total">8,46€/mes</span></div>
+          </div>
+          <h5 style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--green-accent);margin-bottom:8px;font-weight:700;">Método de pago</h5>
+          <div class="pay-method">
+            <button class="pay-method-btn active"><span class="icon">💳</span>Tarjeta</button>
+            <button class="pay-method-btn"><span class="icon">🍎</span>Apple Pay</button>
+            <button class="pay-method-btn"><span class="icon">🅿️</span>PayPal</button>
+          </div>
+          <div class="form-group">
+            <label>Número de tarjeta</label>
+            <input type="text" placeholder="1234 5678 9012 3456" maxlength="19">
+          </div>
+          <div style="display:flex; gap:10px;">
+            <div class="form-group" style="flex: 1;">
+              <label>Caducidad</label>
+              <input type="text" placeholder="MM/AA" maxlength="5">
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label>CVV</label>
+              <input type="text" placeholder="123" maxlength="4">
+            </div>
+          </div>
+          <div style="margin-top: 14px;">
+            <button class="btn btn-primary" onclick="goTo('success')">Pagar <span id="pay-amount">8,46€</span></button>
+            <p class="legal">Cancela cuando quieras. Renovación automática.</p>
+          </div>
+        </div>
+
+        <!-- 14. SUCCESS -->
+        <div class="scr success" data-screen="success">
+          <div class="success-icon">
+            <svg viewBox="0 0 60 60" fill="none">
+              <path d="M15 30 L25 40 L45 18" stroke="white" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h2>¡Bienvenido a Premium!</h2>
+          <p>Tu cuenta está lista. Empieza a entrenar y a mejorar tu juego con todas las funciones desbloqueadas.</p>
+          <button class="btn btn-primary" onclick="resetFlow()">Empezar a entrenar</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="flow-indicator" id="flow-indicator">Flujo: <span>Selecciona un nivel para empezar</span></div>
+
+<div class="controls">
+  <button onclick="resetFlow()">↺ Reiniciar</button>
+  <button onclick="quickFlow('beginner')">▶ Demo Principiante</button>
+  <button onclick="quickFlow('intermediate')">▶ Demo Intermedio</button>
+  <button onclick="quickFlow('advanced')">▶ Demo Avanzado</button>
+</div>
+
+<script>
+  let currentLevel = null;
+  let currentPlan = 'premium';
+  let recordingState = false;
+  let recordingTimer = null;
+  let recordingSeconds = 0;
+  let analyzingTimer = null;
+
+  function goTo(id) {
+    document.querySelectorAll('.scr').forEach(s => s.classList.remove('active'));
+    const target = document.querySelector(`[data-screen="${id}"]`);
+    if (target) {
+      target.classList.add('active');
+      target.scrollTop = 0;
+    }
+    if (id === 'analyzing') startAnalyzing();
+    if (id !== 'camera') stopRecording();
+    if (id === 'checkout') updateCheckout();
+    updateIndicator(id);
+  }
+
+  function setLevel(lvl) {
+    currentLevel = lvl;
+  }
+
+  function selectPlan(card) {
+    document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    currentPlan = card.dataset.plan;
+  }
+
+  function continueFromPlan() {
+    if (currentPlan === 'free') {
+      goTo('success');
+    } else {
+      goTo('checkout');
+    }
+  }
+
+  function updateCheckout() {
+    const plans = {
+      'premium': { name: 'Premium', price: 6.99 },
+      'premium-plus': { name: 'Premium Plus', price: 15.99 }
+    };
+    const p = plans[currentPlan] || plans.premium;
+    const tax = +(p.price * 0.21).toFixed(2);
+    const total = +(p.price + tax).toFixed(2);
+    document.getElementById('sum-plan').textContent = p.name;
+    document.getElementById('sum-sub').textContent = p.price.toFixed(2).replace('.', ',') + '€';
+    document.getElementById('sum-tax').textContent = tax.toFixed(2).replace('.', ',') + '€';
+    document.getElementById('sum-total').textContent = total.toFixed(2).replace('.', ',') + '€/mes';
+    document.getElementById('pay-amount').textContent = total.toFixed(2).replace('.', ',') + '€';
+  }
+
+  function toggleRecording() {
+    const btn = document.getElementById('record-btn');
+    const status = document.getElementById('rec-status');
+    const timer = document.getElementById('cam-timer');
+    if (!recordingState) {
+      recordingState = true;
+      recordingSeconds = 0;
+      btn.classList.add('recording');
+      status.textContent = 'Grabando';
+      timer.classList.add('active');
+      timer.textContent = '00:00';
+      recordingTimer = setInterval(() => {
+        recordingSeconds++;
+        const m = String(Math.floor(recordingSeconds/60)).padStart(2,'0');
+        const s = String(recordingSeconds%60).padStart(2,'0');
+        timer.textContent = `${m}:${s}`;
+        if (recordingSeconds >= 4) {
+          stopRecording();
+          goTo('analyzing');
+        }
+      }, 1000);
+    } else {
+      stopRecording();
+      goTo('analyzing');
+    }
+  }
+
+  function stopRecording() {
+    recordingState = false;
+    if (recordingTimer) clearInterval(recordingTimer);
+    const btn = document.getElementById('record-btn');
+    const status = document.getElementById('rec-status');
+    const timer = document.getElementById('cam-timer');
+    if (btn) btn.classList.remove('recording');
+    if (status) status.textContent = 'Listo';
+    if (timer) timer.classList.remove('active');
+  }
+
+  function startAnalyzing() {
+    const fill = document.getElementById('progress-fill');
+    const text = document.getElementById('progress-text');
+    const messages = [
+      'Procesando video...',
+      'Detectando postura...',
+      'Analizando agarre...',
+      'Midiendo rotación...',
+      'Generando feedback...'
+    ];
+    let pct = 0;
+    let msgIdx = 0;
+    fill.style.width = '0%';
+    text.textContent = messages[0];
+    if (analyzingTimer) clearInterval(analyzingTimer);
+    analyzingTimer = setInterval(() => {
+      pct += 4;
+      fill.style.width = pct + '%';
+      const newMsgIdx = Math.min(Math.floor(pct / 22), messages.length - 1);
+      if (newMsgIdx !== msgIdx) {
+        msgIdx = newMsgIdx;
+        text.textContent = messages[msgIdx];
+      }
+      if (pct >= 100) {
+        clearInterval(analyzingTimer);
+        setTimeout(() => goTo('feedback'), 400);
+      }
+    }, 100);
+  }
+
+  function updateIndicator(id) {
+    const map = {
+      'splash': 'Splash',
+      'onb1': 'Onboarding 1/3',
+      'onb2': 'Onboarding 2/3',
+      'onb3': 'Onboarding 3/3',
+      'level': 'Selección de nivel',
+      'tutorial': '🌱 Principiante · Video tutorial',
+      'reminders': '⛳ Intermedio · Recordatorios',
+      'camera': 'Grabar swing',
+      'analyzing': 'Analizando con IA',
+      'feedback': 'Feedback del swing',
+      'authPromo': 'Invitación a registro',
+      'signup': 'Registro (correo + número)',
+      'plans': 'Elección de plan',
+      'checkout': 'Pago',
+      'success': '¡Bienvenido!'
+    };
+    const lvlPrefix = currentLevel ? ({beginner:'🌱',intermediate:'⛳',advanced:'🏆'})[currentLevel] + ' ' : '';
+    document.querySelector('#flow-indicator span').textContent = lvlPrefix + (map[id] || id);
+  }
+
+  function resetFlow() {
+    currentLevel = null;
+    currentPlan = 'premium';
+    document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
+    document.querySelector('[data-plan="premium"]').classList.add('selected');
+    stopRecording();
+    if (analyzingTimer) clearInterval(analyzingTimer);
+    goTo('splash');
+  }
+
+  function quickFlow(level) {
+    setLevel(level);
+    if (level === 'beginner') goTo('tutorial');
+    else if (level === 'intermediate') goTo('reminders');
+    else goTo('camera');
+  }
+
+  // Auto advance from splash after 1.8s
+  setTimeout(() => {
+    const cur = document.querySelector('.scr.active');
+    if (cur && cur.dataset.screen === 'splash') goTo('onb1');
+  }, 1800);
+
+  updateIndicator('splash');
+</script>
+
+</body>
+</html>
